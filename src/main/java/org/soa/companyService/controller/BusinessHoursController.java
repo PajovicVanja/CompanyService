@@ -15,7 +15,7 @@ public class BusinessHoursController {
     @Autowired
     private BusinessHoursService businessHoursService;
 
-    // Get all business hours
+    // Get all business hourss
     @GetMapping
     public List<BusinessHours> getAllBusinessHours() {
         return businessHoursService.getAllBusinessHours();
