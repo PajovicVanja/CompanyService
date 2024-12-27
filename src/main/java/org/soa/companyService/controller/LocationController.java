@@ -1,5 +1,7 @@
 package org.soa.companyService.controller;
 
+import org.soa.companyService.dto.CreateLocationRequest;
+import org.soa.companyService.dto.UpdateLocationRequest;
 import org.soa.companyService.model.Location;
 import org.soa.companyService.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +17,11 @@ public class LocationController {
     @Autowired
     private LocationService locationService;
 
-    // Get all locations
     @GetMapping
     public List<Location> getAllLocations() {
         return locationService.getAllLocations();
     }
 
-    // Get a location by ID
     @GetMapping("/{id}")
     public ResponseEntity<Location> getLocationById(@PathVariable Long id) {
         return locationService.getLocationById(id)
@@ -29,23 +29,44 @@ public class LocationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Create a new location
     @PostMapping
-    public Location createLocation(@RequestBody Location location) {
-        return locationService.createLocation(location);
+    public ResponseEntity<Location> createLocation(@RequestBody CreateLocationRequest request) {
+        Location location = new Location();
+        location.setName(request.getName());
+        location.setNumber(request.getNumber());
+
+        // Fetch and set Parent Location if provided
+        if (request.getParentLocationId() != null) {
+            Location parentLocation = locationService.getLocationById(request.getParentLocationId())
+                    .orElseThrow(() -> new RuntimeException("Parent Location not found with id " + request.getParentLocationId()));
+            location.setParentLocation(parentLocation);
+        }
+
+        Location createdLocation = locationService.createLocation(location);
+        return ResponseEntity.ok(createdLocation);
     }
 
-    // Update a location
     @PutMapping("/{id}")
-    public ResponseEntity<Location> updateLocation(@PathVariable Long id, @RequestBody Location location) {
+    public ResponseEntity<Location> updateLocation(@PathVariable Long id, @RequestBody UpdateLocationRequest request) {
         try {
-            return ResponseEntity.ok(locationService.updateLocation(id, location));
+            Location location = new Location();
+            location.setName(request.getName());
+            location.setNumber(request.getNumber());
+
+            // Fetch and set Parent Location if provided
+            if (request.getParentLocationId() != null) {
+                Location parentLocation = locationService.getLocationById(request.getParentLocationId())
+                        .orElseThrow(() -> new RuntimeException("Parent Location not found with id " + request.getParentLocationId()));
+                location.setParentLocation(parentLocation);
+            }
+
+            Location updatedLocation = locationService.updateLocation(id, location);
+            return ResponseEntity.ok(updatedLocation);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    // Delete a location
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
         locationService.deleteLocation(id);
